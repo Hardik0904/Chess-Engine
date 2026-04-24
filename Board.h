@@ -12,6 +12,7 @@ public:
     void initialize();
     void print();
     void makeMove(Move m);
+    int evaluate();
 
     std::vector<Move> getPawnMoves(int r, int c);
     std::vector<Move> getKnightMoves(int r, int c);
