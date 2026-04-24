@@ -13,6 +13,8 @@ public:
     void print();
     void makeMove(Move m);
     int evaluate();
+    int minimax(int depth, bool isMaximizing);
+    Move findBestMove(int depth);
 
     std::vector<Move> getPawnMoves(int r, int c);
     std::vector<Move> getKnightMoves(int r, int c);

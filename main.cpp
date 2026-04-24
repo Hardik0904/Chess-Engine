@@ -39,10 +39,16 @@ int main() {
         Move m = parseMove(from, to);
 
         if (isValidMove(m, moves)) {
-            b.makeMove(m);
-            whiteTurn = !whiteTurn;
-        } else {
-            cout << "Invalid move!\n";
-        }
+    b.makeMove(m);
+    whiteTurn = false;
+
+    // AI (black) move
+    Move aiMove = b.findBestMove(3);
+    b.makeMove(aiMove);
+
+    whiteTurn = true;
+    } else {
+    cout << "Invalid move!\n";
+    }
     }
 }

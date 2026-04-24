@@ -1,4 +1,5 @@
 #include "Board.h"
+#include <climits>
 #include <iostream>
 using namespace std;
 
@@ -174,33 +175,30 @@ vector<Move> Board::getAllMoves(bool whiteTurn) {
 vector<Move> Board::getRookMoves(int r, int c) {
     vector<Move> moves;
 
-    int directions[4][2] = {
+    int dirs[4][2] = {
         {-1,0}, {1,0}, {0,-1}, {0,1}
     };
 
-    for (auto& d : directions) {
+    char piece = board[r][c];
+    bool white = isupper(piece);
+
+    for (auto &d : dirs) {
         int nr = r + d[0];
         int nc = c + d[1];
 
         while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
             char target = board[nr][nc];
 
-            if (board[r][c] == 'R') {
-                if (target == '.') {
+            if (target == '.') {
+                moves.push_back({r,c,nr,nc});
+            } 
+            else {
+                if (white && islower(target))
                     moves.push_back({r,c,nr,nc});
-                } else {
-                    if (islower(target)) moves.push_back({r,c,nr,nc});
-                    break;
-                }
-            }
+                else if (!white && isupper(target))
+                    moves.push_back({r,c,nr,nc});
 
-            if (board[r][c] == 'r') {
-                if (target == '.') {
-                    moves.push_back({r,c,nr,nc});
-                } else {
-                    if (isupper(target)) moves.push_back({r,c,nr,nc});
-                    break;
-                }
+                break; // always stop
             }
 
             nr += d[0];
@@ -214,33 +212,30 @@ vector<Move> Board::getRookMoves(int r, int c) {
 vector<Move> Board::getBishopMoves(int r, int c) {
     vector<Move> moves;
 
-    int directions[4][2] = {
+    int dirs[4][2] = {
         {-1,-1}, {-1,1}, {1,-1}, {1,1}
     };
 
-    for (auto& d : directions) {
+    char piece = board[r][c];
+    bool white = isupper(piece);
+
+    for (auto &d : dirs) {
         int nr = r + d[0];
         int nc = c + d[1];
 
         while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
             char target = board[nr][nc];
 
-            if (board[r][c] == 'B') {
-                if (target == '.') {
+            if (target == '.') {
+                moves.push_back({r,c,nr,nc});
+            } 
+            else {
+                if (white && islower(target))
                     moves.push_back({r,c,nr,nc});
-                } else {
-                    if (islower(target)) moves.push_back({r,c,nr,nc});
-                    break;
-                }
-            }
+                else if (!white && isupper(target))
+                    moves.push_back({r,c,nr,nc});
 
-            if (board[r][c] == 'b') {
-                if (target == '.') {
-                    moves.push_back({r,c,nr,nc});
-                } else {
-                    if (isupper(target)) moves.push_back({r,c,nr,nc});
-                    break;
-                }
+                break;
             }
 
             nr += d[0];
@@ -293,4 +288,81 @@ int Board::evaluate() {
     }
 
     return score;
+}
+
+
+int Board::minimax(int depth, bool isMaximizing) {
+    if (depth == 0) {
+        return evaluate();
+    }
+
+    vector<Move> moves = getAllMoves(isMaximizing);
+
+    if (moves.empty()) {
+        return evaluate();
+    }
+
+    if (isMaximizing) {
+        int best = INT_MIN;
+
+        for (auto move : moves) {
+            char captured = board[move.endRow][move.endCol];
+
+            makeMove(move);
+
+            int score = minimax(depth - 1, false);
+
+            // undo move
+            board[move.startRow][move.startCol] = board[move.endRow][move.endCol];
+            board[move.endRow][move.endCol] = captured;
+
+            best = max(best, score);
+        }
+
+        return best;
+    } else {
+        int best = INT_MAX;
+
+        for (auto move : moves) {
+            char captured = board[move.endRow][move.endCol];
+
+            makeMove(move);
+
+            int score = minimax(depth - 1, true);
+
+            // undo move
+            board[move.startRow][move.startCol] = board[move.endRow][move.endCol];
+            board[move.endRow][move.endCol] = captured;
+
+            best = min(best, score);
+        }
+
+        return best;
+    }
+}
+
+Move Board::findBestMove(int depth) {
+    vector<Move> moves = getAllMoves(false); // AI = black
+
+    int bestScore = INT_MAX;
+    Move bestMove;
+
+    for (auto move : moves) {
+        char captured = board[move.endRow][move.endCol];
+
+        makeMove(move);
+
+        int score = minimax(depth - 1, true);
+
+        // undo
+        board[move.startRow][move.startCol] = board[move.endRow][move.endCol];
+        board[move.endRow][move.endCol] = captured;
+
+        if (score < bestScore) {
+            bestScore = score;
+            bestMove = move;
+        }
+    }
+
+    return bestMove;
 }
